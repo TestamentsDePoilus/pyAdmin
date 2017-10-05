@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0">
+   <!-- Ceci est un fichier XML pour tester la saisie de la transcription d'un testament conformément au schéma Relax NG élaboré pour le projet Testaments de Poilus -->
+   
+   <!-- pour tester dans oXygen : Document > Valider > Configurer scénario de validation 
+      puis déclarer l'association avec le schéma, et cocher la case "règles Schematron intégrées"-->
+   <teiHeader>
+      <!-- FC pour l'en-tête TEI, le modèle reste à faire. Tous les éléments TEI sont aujourd'hui disponibles -->
+      <fileDesc>
+         <titleStmt>
+            <title>Title</title>
+            <!-- mentions de responsabilité : le fichier TEI final doit stocker la liste des contributeurs : transcription, annotation, validation -->
+            <respStmt>
+               <resp>identification du testament</resp>
+               <persName xml:id="tata">Serge Machin</persName>
+            </respStmt>
+            <!-- <respStmt>
+               <!-\- généré autoamtiquement -\->
+               <resp>numérisation</resp>
+               <orgName>labo photo des AN</orgName>
+            </respStmt>-->
+            <respStmt>
+               <resp>transcription</resp>
+               <persName xml:id="toto"
+                  ><!--<surname>Dupont</surname><forename>Lily</forename>-->toto</persName>
+               <persName xml:id="MDurand"
+                  ><surname>Durand</surname><forename>Michel</forename></persName>
+            </respStmt>
+            <respStmt>
+               <resp>annotation</resp>
+               <persName corresp="#MDurand">
+                  <surname>Durand</surname><forename>Michel</forename>
+               </persName>
+            </respStmt>
+            <respStmt>
+               <resp>validation</resp>
+               <persName xml:id="FClavaud"
+                  ><surname>Clavaud</surname><forename>Florence</forename></persName>
+            </respStmt>
+         </titleStmt>
+         <publicationStmt>
+            <p>Publication Information</p>
+         </publicationStmt>
+         <sourceDesc>
+            <!-- description du document édité -->
+            <msDesc>
+
+               <msIdentifier>
+                  <!-- TODO voir AD 78 pour l'alternative AD78 -->
+                  <institution>Archives nationales</institution>
+                  <collection>Minutier central des notaires de Paris</collection>
+
+                  <idno>MC/ET/XLVIII/1820, minute du 20 janvier 1921 (dépôt du testament de Fernand
+                     Lucien Jules Melchior Chatin)</idno>
+                  <msName>Testament de Fernand Lucien Jules Melchior Chatin (31 juillet
+                     1914)</msName>
+
+               </msIdentifier>
+               <msContents>
+                  <summary>
+                     <p><date when="1914-07-31" type="willDate">1914, 31 juillet</date>. <placeName
+                           type="willPlace">Paris</placeName>.</p>
+                     <p><term type="willType">testament olographe</term> de <persName
+                           ref="#FLChatin"><forename>Fernand</forename>
+                           <forename>Lucien</forename>
+                           <forename>Jules</forename>
+                           <forename>Melchior</forename>
+                           <surname>Chatin</surname></persName>, mort pour la France à <placeName
+                           ref="#pl-056" type="willAuthorDeathPlace">Maroeuil
+                           (Pas-de-Calais)</placeName>, le <date when="1915-01-10"
+                           type="willAuthorDeathDate">10 janvier 1915</date>.</p>
+                     <bibl/>
+                  </summary>
+
+
+               </msContents>
+               <!-- <physDesc><p>Papier à lettre de deuil avec adresse imprimée, 4 pages, dim. 17,2 x 11,2 cm,
+                 encre.</p></physDesc>-->
+               <physDesc>
+
+                  <objectDesc>
+                     <supportDesc>
+                        <support>papier à lettre de deuil avec adresse imprimée</support>
+                        <extent>4 pages, <dimensions unit="cm">
+                              <height>17,2</height>
+                              <width>11,2</width>
+                           </dimensions></extent>
+                     </supportDesc>
+
+                  </objectDesc>
+                  <handDesc>
+                     <p>encre</p>
+                  </handDesc>
+               </physDesc>
+
+            </msDesc>
+         </sourceDesc>
+
+      </fileDesc>
+      <revisionDesc>
+         <!-- le fichier TEI doit consigner la liste des principales étapes de travail -->
+
+         <!--  <change when="2017-07-30" who="#LDupont">première transcription</change>-->
+         <change when-iso="2017-07-31/2017-08-02" who="#MDurand #tata">transcription</change>
+         <change when="2017-08-01" who="#FClavaud">validation</change>
+         <change when="2017-08-03" who="#KPineau">export</change>
+      </revisionDesc>
+   </teiHeader>
+   <facsimile xml:base="blah">
+
+
+      <!-- déclaration des images numériques du testament -->
+      <!-- au moins un élément graphic. chacun a obligatorement un attr. url qui donne l'URL relative de l'image, et un identifiant xml:id qui est formé de l'id du testament + "_" + id de la vue pris ds le fichier de récolement -->
+
+      <!--
+         Option 1, simplissime : les images en séquence simple, juste les jpg
+             
+         <graphic url="JPEG/FRAN_Poilus_t-0001_01.jpg" xml:id="testament-0001_vue-01"/>
+      <graphic url="JPEG/FRAN_Poilus_t-0001_02a.jpg" xml:id="testament-0001_vue-02a"/>
+      <graphic url="JPEG/FRAN_Poilus_t-0001_02b.jpg" xml:id="testament-0001_vue-02b"/>
+      -->
+      <!-- CHECK : url de l'image TIFF ou JPEG ? ou les deux ?? si les 2, utiliser surface pour grouper les images-->
+      <!--
+       option 2 : on utilise surface pour apparier les versions jPEG et TIFF des images -->
+      <!-- la valeur de l'attr. type peut être "will-page", "will-envelope-recto", "will-envelope-verso" -->
+      <!--  la valeur de l'attr. n est prise dans la colonne numéro du fichier de récolement ; dans le cas général on y trouve le numéro d'ordre logique, de 1 à n, de l'unité physique, testament avant enveloppe  -->
+      <surface type="will-page" n="01">
+         <graphic url="TIFF/FRAN_Poilus_t-0001_01.tif" xml:id="testament-0001_vue-01_jpg"/>
+         <graphic url="JPEG/FRAN_Poilus_t-0001_01.jpg" xml:id="testament-0001_vue-01_tif"/>
+      </surface>
+      <!-- lorsqu'on a deux images complémentaires, reproduisant une partie de la même unité physique, on peut utiliser surfaceGrp -->
+      <!-- ici l'attr. n a toujours pour valeur le numéro d'ordre de l'unité physique -->
+      <surfaceGrp type="will-page" n="02">
+
+         <surface type="will-page-part" n="02a">
+            <graphic url="JPEG/FRAN_Poilus_t-0001_02a.jpg" xml:id="testament-0001_vue-02a_jpg"> </graphic>
+            <graphic url="TIFF/FRAN_Poilus_t-0001_02a.tif" xml:id="testament-0001_vue-02a_tif"/>
+         </surface>
+         <surface type="will-page-part" n="02b">
+            <graphic url="JPEG/FRAN_Poilus_t-0001_02b.jpg" xml:id="testament-0001_vue-02b_jpg"/>
+
+            <graphic url="TIFF/FRAN_Poilus_t-0001_02b.jpg" xml:id="testament-0001_vue-02b_tif"/>
+
+
+         </surface>
+      </surfaceGrp>
+      <!-- supposons qu'il y a une enveloppe ; deux cas, recto et verso-->
+      <!-- <surface type="will-envelope-recto" n="03">
+         
+      </surface>
+      <surface type="will-envelope-verso" n="04">
+         
+      </surface>-->
+
+   </facsimile>
+   <text xml:id="will-0001">
+
+      <!-- un identifiant composé de préfixe invariable "will", suivi de tiret, + , + nombre sur 4 digits-->
+      <!-- CHECK  : ajouter code pour l'institution de conservation ?-->
+
+      <body>
+         <div type="will">
+            <pb facs="#testament-0001_vue-01_jpg"/>
+
+
+
+            <dateline rend="centered"><placeName type="willPlace">Paris</placeName><choice>
+
+                  <orig><damage agent="stain" quantity="2" unit="cm"><gap reason="hidden"
+                     /></damage></orig>
+                  <reg>,</reg>
+               </choice> le <date type="willDate" when="1914-07-31"><choice>
+                     <orig>trente et un</orig>
+                     <reg>trente-et-un</reg>
+                  </choice>
+                  <choice>
+                     <orig> Juillet</orig>
+                     <reg> juillet</reg>
+
+                  </choice><lb/>
+                  <choice>
+                     <orig>mil</orig>
+                     <reg>mille</reg>
+                  </choice> neuf cent quatorze<lb/> (31 <choice>
+                     <orig>Juillet</orig>
+                     <reg>juillet</reg>
+
+                  </choice> 1914)</date></dateline>
+            <head>Ceci est mon testament<choice>
+                  <orig> : </orig>
+                  <reg>.</reg>
+
+               </choice></head>
+            <p><choice>
+                  <abbr>to.</abbr>
+                  <expan>toto</expan>
+               </choice>Avant de partir à la guerre dont<lb/> tant ne reviendront pas, je tiens à
+               décider<lb/> ce qui suit<choice>
+
+                  <orig> : </orig>
+                  <reg/>
+               </choice><choice>
+                  <sic>blah</sic>
+                  <corr>bla</corr>
+               </choice></p>
+            <p><damage agent="stain">bla <supplied reason=" hidden" resp="#FClavaud">blah
+                     blah</supplied><unclear> et bli</unclear></damage>Je lègue à mon cher frère <choice>
+                  <abbr>M.</abbr>
+                  <expan>M<ex>onsieur</ex></expan>
+
+               </choice> André<lb/> Victor Chatin l’universalité de mes biens<lb/> (en dehors de la
+               part réservatrice qui revient<lb/> à mon excellente mère, part que je désire<lb/>
+               qu’elle prenne sur <choice>
+                  <sic>fote</sic>
+                  <corr/>
+               </choice>la partie de mes biens<lb/> dont elle n’a que l’usufruit)<choice>
+                  <orig/>
+                  <reg>,</reg>
+               </choice> à charge<lb/> pour mon frère André de remettre aux<lb/> personnes ci-après
+               les <damage agent="stain"><supplied resp="#LDupont">legs</supplied>
+                  <unclear>suivants</unclear></damage> :</p>
+            
+            <!--<pb facs="../images/FRAN_0045_00307.jpg"/>-->
+            <pb facs="#testament-0001_vue-02_jpg"/>
+            
+            <list>
+
+               <item>1° <choice>
+                     <orig>à</orig>
+                     <reg>À</reg>
+                  </choice> mon amie <choice>
+                     <abbr>M<hi rend="superscript-underlined">me</hi></abbr>
+                     <expan>M<ex>ada</ex>me</expan>
+                  </choice> Anny Coker,<lb/> artiste lyrique, 82 <choice>
+                     <orig>Rue</orig>
+                     <reg>rue</reg>
+                  </choice> du Faubourg<lb/>
+                  <choice>
+                     <abbr>S<hi rend="superscript">t</hi>-Denis</abbr>
+                     <expan>S<ex>ain</ex>t-Denis</expan>
+                  </choice>, une somme de vingt mille<lb/> francs (<choice>
+                     <orig>20,000</orig>
+                     <reg>20 000</reg>
+
+                  </choice>) <app>
+                     <lem>en pleine propriété et libre de tous frais</lem>
+                     <note>Ajout dans l’interligne.</note>
+                  </app><choice>
+                     <orig> - </orig>
+                     <reg>.</reg>
+
+                  </choice> Je prie en outre<lb/> mon cher frère de remettre dès ma<lb/> mort <hi
+                     rend="underlined">et le plus vite possible</hi> à <choice>
+                     <abbr>M<hi rend="superscript">me</hi></abbr>
+                     <expan>M<ex>ada</ex>me</expan>
+                  </choice><lb/> Anny Coker<choice>
+                     <orig>,</orig>
+                     <reg/>
+
+                  </choice> une somme de <hi rend="double-underlined">deux</hi> mille<lb/> francs à
+                  prélever sur les vingt mille<lb/> que je lui donne<choice>
+                     <orig/>
+                     <reg>,</reg>
+                  </choice> afin d’assurer<lb/> sa subsistance jusqu’à la fin de<lb/> son entrée en
+                  possession du legs que<lb/> je lui fais. Cette somme de vingt mille francs<lb/>
+                  <add place="below">sera remise à <choice>
+                        <abbr>M<hi rend="superscript-underlined">me</hi></abbr>
+                        <expan>M<ex>ada</ex>me</expan>
+                     </choice> Anny Coker libre de toute charge ou impôt<lb/> au moment où elle la
+                     recevra</add><choice>
+                     <orig> - </orig>
+                     <reg>.</reg>
+
+                  </choice></item>
+               <item>2° <choice>
+                     <orig>à</orig>
+                     <reg>À</reg>
+                  </choice>
+                  <persName>ma mère</persName>
+                  <del>je lui</del> tous mes objets de<lb/> piété et ce qu’elle désirera dans
+                  mes<lb/> meubles en dehors des objets légués.</item>
+               <item>3° <choice>
+                     <orig>à</orig>
+                     <reg>À</reg>
+                  </choice> mon frère Paul Chatin de Chastaing <ref xml:id="will-001-001"
+                     target="#will-001-footnote001"/><lb/> une somme de cinq mille francs et<lb/> ma
+                  montre à sonnerie<choice>
+                     <orig/>
+                     <reg>.</reg>
+
+                  </choice></item>
+               <item>4° <choice>
+                     <orig>à</orig>
+                     <reg>À</reg>
+                  </choice> mon ami Paul de Fallois 69 <choice>
+                     <orig>Rue</orig>
+                     <reg>rue</reg>
+
+                  </choice> de <subst>
+                     <del>bli</del>
+                     <add>toto</add>
+                  </subst>
+                  <!--  <pb facs="../images/FRAN_0045_00308.jpg"/>--> Grenelle, ma montre en or de
+                  première<lb/> communion en souvenir d’un vieil<lb/> ami<choice>
+                     <orig/>
+                     <reg>.</reg>
+
+                  </choice></item>
+               <item>5° <choice>
+                     <orig>à</orig>
+                     <reg>À</reg>
+                  </choice> mon vieil ami Morel mon fusil<lb/> calibre 12 percussion centrale <!--(de Warn--><!-- FC correction 21 mars 2°16--><app>
+                     <lem> (de Warn<damage agent="stain">er</damage><supplied reason="hidden"
+                           resp="#MDurand">er</supplied>)</lem>
+                     <note resp="#MDurand">Tache d’encre à la fin du mot.</note>
+                  </app>
+                  <choice>
+                     <orig/>
+                     <reg>.</reg>
+
+                  </choice><lb/> Mon ami Morel habite 2 <choice>
+                     <orig>Rue</orig>
+                     <reg>rue</reg>
+
+                  </choice> Lénac<lb/> à Marseille<choice>
+                     <sic><surplus>Marseille</surplus></sic>
+                     <corr/>
+                  </choice>.</item>
+            </list>
+            <list>
+               <item/>
+               <space dim="vertical"/>
+               <metamark function="separating" rend="horizontal-line"/>
+            </list>
+            <p>Pour le reste de mes biens mon <damage agent="stain"><supplied resp="#LDupont"
+                     >frère</supplied></damage><lb/> André, dont je connais <unclear
+                  reason="quite-illegible">l’esprit de</unclear><lb/> sagesse et de bon sens, les
+               reçoit en<lb/> pleine propriété. Puisse-t-il en<lb/> jouir longtemps et heureux !</p>
+            <dateline rend="centered">Fait à Paris<choice>
+                  <orig/>
+                  <reg>,</reg>
+               </choice> le 31 <choice>
+                  <orig>Juillet</orig>
+                  <reg>juillet</reg>
+
+               </choice> 1914</dateline>
+            <signed rend="centered"><seg type="signature"><persName ref="#FLChatin"
+                        ><forename>Fernand</forename> <surname>Chatin</surname></persName></seg></signed>
+
+            <postscript>
+               <p><app>
+                     <lem/>
+                     <note/>
+                  </app>Ce testament annule tous ceux que j’aurais<lb/> pu faire auparavant. <seg
+                     type="signature"><persName ref="#FLChatin"
+                           ><forename>Fernand</forename> <surname>Chatin</surname>
+                     </persName></seg>
+               </p>
+            </postscript>
+
+
+            <!--<pb facs="../images/FRAN_0045_00309.jpg"/>-->
+         </div>
+         <!-- <div type="envelope">
+        <pb/>
+      <p></p>
+     </div>-->
+
+      </body>
+      <back>
+         <div type="notes">
+
+            <note xml:id="will-001-footnote001" resp="#MDurand #FClavaud">Sur Paul Chatin de
+               Chastaing, voir <bibl>une référence biblio avec un <title>titre</title></bibl>, et
+               consulter <ref target="http://www.bnf.fr">une page web</ref>.</note>
+         </div>
+
+      </back>
+   </text>
+</TEI>
