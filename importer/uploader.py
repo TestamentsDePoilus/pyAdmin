@@ -2,11 +2,12 @@ import csv
 import requests
 import json
 import codecs
+import datetime
 from operator import itemgetter
 
 
 def read_data(metadata_file_url, numerisation_file_url, access_token, entities, hosting_organization):
-    ho_id = get_entity('hosting-organizations', hosting_organization).id
+    ho_id = get_entity('hosting-organizations', hosting_organization)[0]['id']
 
     with open(metadata_file_url, newline='', encoding='utf-8') as csvfile:
         spamreader = csv.reader(csvfile, delimiter=';', quotechar='|')
@@ -54,31 +55,35 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
             testator__birth_place_normalized = row[37]
             testator__biography_string = row[38]
             testator__biography_link = row[39]
-            will__notes = row[40]
-            will__is_letter = row[41]
-            will__will_phys_support = row[42]
-            will__will_phys_hand = row[43]
-            will__will_phys_dimensions = row[44]
-            will__codicil_phys_support = row[45]
-            will__codicil_phys_hand = row[46]
-            will__codicil_phys_dimensions = row[47]
-            will__envelope_phys_support = row[48]
-            will__envelope_phys_hand = row[49]
-            will__envelope_phys_dimensions = row[50]
-            will__total_pages_number = row[51]
-            will__total_view_number = row[52]
-            will__photoshop = row[53]
+            will__notes = row[41]
+            will__is_letter = row[42]
+            will__will_phys_support = row[43]
+            will__will_phys_hand = row[44]
+            will__will_phys_dimensions = row[45]
+            will__codicil_phys_support = row[46]
+            will__codicil_phys_hand = row[47]
+            will__codicil_phys_dimensions = row[48]
+            will__envelope_phys_support = row[49]
+            will__envelope_phys_hand = row[50]
+            will__envelope_phys_dimensions = row[51]
+            will__total_pages_number = row[52]
+            will__total_view_number = row[53]
+            will__photoshop = row[54]
             entity__resources = []
 
-            with open(numerisation_file_url, newline='', encoding='utf-8') as csvfilenumerisation:
-                spamreader_numerisation = csv.reader(csvfile, delimiter=';', quotechar='|')
+            with open(numerisation_file_url, newline='', encoding='utf-8') as csvfile_numerisation:
+                spamreader_numerisation = csv.reader(csvfile_numerisation, delimiter=';', quotechar='|')
                 for row_numerisation in spamreader_numerisation:
                     if row_numerisation[0] == entity__will_number:
+                        is_already_resource = False
                         order_in_will = compute_resource_order_in_will(row_numerisation[2])
                         gen = (resource for resource in entity__resources if resource['orderInWill'] == order_in_will)
-                        if len(gen) > 0:
-                            gen[0]["images"].append(row_numerisation[2])
-                        else:
+                        for resource in gen:
+                            print(resource)
+                            resource["images"].append(row_numerisation[2])
+                            is_already_resource = True
+
+                        if is_already_resource is False:
                             entity__resources.append({
                                 "type": encode_resource_type(row_numerisation[1]),
                                 "orderInWill": order_in_will,
@@ -89,7 +94,6 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                                     "updateComment": "Creation of the transcript"
                                 }
                             })
-            print(entity__resources)
 
             if entity__will_number not in entities:
                 # Name of the testator
@@ -102,14 +106,14 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                 if testator__index_name != '':
                     index_name = testator__index_name
                 else:
-                    index_name = + testator__lastname.upper() + " " + testator__firstnames
+                    index_name = testator__lastname.upper() + " " + testator__firstnames
 
                 # Will type management
                 if will__is_letter == "":
                     will_type = "Testament olographe"
                 else:
                     will_type = "Lettre de dernières volontés"
-                will_type_id = get_entity('will-types', will_type).id
+                will_type_id = get_entity('will-types', will_type)[0]['id']
 
                 testator_data = {
                     "name": name,
@@ -123,14 +127,14 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                     "addressStreet": testator__address_street_normalized,
                     "addressDistrict": extract_value(testator__address_city_normalized, 'a'),
                     "addressCity": compute_entity("places", extract_value(testator__address_city_normalized, False), None, access_token),
-                    "dateOfBirthString ": testator__birth_date_string,
-                    "yearOfBirth": testator__birth_date_normalized[len(testator__birth_date_normalized)-4:],
+                    "dateOfBirthString": testator__birth_date_string,
+                    "yearOfBirth": testator__birth_date_normalized[:4],
                     "dateOfBirthNormalized": testator__birth_date_normalized,
                     "dateOfBirthEndNormalized": None,
                     "placeOfBirthString": testator__birth_place_string,
                     "placeOfBirthNormalized": compute_entity("places", testator__birth_place_normalized, None, access_token),
                     "dateOfDeathString": testator__death_date_string,
-                    "yearOfDeath": testator__death_date_normalized[len(testator__death_date_normalized)-4:],
+                    "yearOfDeath": testator__death_date_normalized[:4],
                     "dateOfDeathNormalized": testator__death_date_normalized,
                     "dateOfDeathEndNormalized": testator__death_date_end_normalized,
                     "placeOfDeathNormalized": compute_entity("places", testator__death_place_normalized, None, access_token),
@@ -162,6 +166,11 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                         }, access_token)
 
                 # Entity management:
+                if entity__is_shown.find("X") != -1:
+                    entity__is_shown = False
+                else:
+                    entity__is_shown = True
+
                 entities[entity__will_number] = {
                     "willNumber": entity__will_number,
                     "isShown": entity__is_shown,
@@ -174,11 +183,11 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                         "minuteDateString": will__minute_date_string,
                         "minuteDateNormalized": will__minute_date_normalized,
                         "minuteDateEndNormalized": None,
-                        "minuteYear": will__minute_date_normalized[len(will__minute_date_normalized)-4:],
+                        "minuteYear": will__minute_date_normalized[:4],
                         "willWritingDateString": will__will_writing_date_string,
                         "willWritingDateNormalized": will__will_writing_date_normalized,
                         "willWritingDateEndNormalized": will__will_writing_date_end_normalized,
-                        "willWritingYear": will__will_writing_date_normalized[len(will__will_writing_date_normalized)-4:],
+                        "willWritingYear": will__will_writing_date_normalized[:4],
                         "willWritingPlaceNormalized": compute_entity("places", will__will_writing_place_normalized, None, access_token),
                         "willWritingPlaceString": will__will_writing_place_string,
                         "testator": testator_entity_id,
@@ -197,14 +206,17 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                         "codicilPhysDescHand": will__codicil_phys_hand,
                         "codicilPhysDescNumber": None,
                         "hostingOrganization": ho_id,
-                        "identificationUser": will__validation_resp,
+                        "identificationUsers": will__validation_resp,
                         "willType": will_type_id,
                         "description": will__notes,
                         "isOfficialVersion": True,
                     },
                     "resources": entity__resources
                 }
-    print(entities)
+
+    for entity in entities:
+        print(entities[entity])
+        post_entity('entities', entities[entity], access_token)
 
 
 def isfloat(value):
@@ -215,20 +227,15 @@ def isfloat(value):
     return False
 
 
-def compute_resource_order_in_will(will_resource_number):
-    if will_resource_number.find('-') != -1:
-        scope = will_resource_number[will_resource_number.find('-')+1:]
+def compute_resource_order_in_will(image_name):
+    if image_name.find('_') != -1:
+        last_part = image_name[image_name.rfind('_')+1:len(image_name)]
+        if last_part.isdigit() is True:
+            return last_part
+        else:
+            return last_part[:len(last_part)-1]
     else:
-        scope = will_resource_number
-    print(scope)
-
-    if (len(scope) == 3 and not isfloat(scope[0:2])) or (len(scope) == 2 and isfloat(scope[1:2])):
-        result = scope
-    else:
-        result = "0"+scope
-
-    print(result)
-    return result
+        return None
 
 
 def encode_resource_type(type_of_resource):
@@ -247,8 +254,6 @@ def get_entity(type_of_entity, data):
     url = 'http://localhost:8888/TestamentsDePoilus/api/web/app_dev.php/'+type_of_entity+'?search='+data
     response = requests.get(url)
     content = json.loads(codecs.decode(response.content, 'utf-8'))
-
-    print(content)
     return content
 
 
@@ -259,10 +264,10 @@ def post_entity(type_of_entity, data, access_token):
         "Authorization": "Bearer "+access_token
     }
     url = 'http://localhost:8888/TestamentsDePoilus/api/web/app_dev.php/'+type_of_entity
-    response = requests.post(url, data=json.dumps(data).encode('utf-8'), headers=headers)
+    response = requests.post(url, data=json.dumps(data, default=date_converter).encode('utf-8'), headers=headers)
     content = json.loads(codecs.decode(response.content, 'utf-8'))
-
-    print(content)
+    if type_of_entity == "entities":
+        print(content)
     return content
 
 
@@ -282,36 +287,35 @@ def compute_entity(type_of_entity, normalized_entity, extra_data, access_token):
 
     if len(get_entity(type_of_entity, normalized_entity)) > 0:
         # The entity already exist, we return the id
-        print(get_entity(type_of_entity, normalized_entity)[0])
         return get_entity(type_of_entity, normalized_entity)[0]['id']
     else:
         if normalized_entity is not None and normalized_entity != "" and normalized_entity != " ":
             # The entity doesn't exist, we prepare it and the we post it
             if type_of_entity == "places":
-                print(normalized_entity)
                 data = {
+                    # "indexName": TODO,
                     "names": [{
-                        "name": extract_value(normalized_entity, None),
+                        "name": extract_value(normalized_entity, False),
                         "updateComment": "Creation of the entity"
                     }],
                     "updateComment": "Creation of the entity",
                     "isOfficialVersion": True,
                 }
                 if extract_value(normalized_entity, True) is not None:
-                    data['frenchDepartements'].append({
+                    data['frenchDepartements'] = [{
                         "name": extract_value(normalized_entity, True),
                         "updateComment": "Creation of the entity"
-                    })
+                    }]
                 if extract_value(normalized_entity, "p") is not None:
-                    data['countries'].append({
-                        "name": extract_value(normalized_entity, True),
+                    data['countries'] = [{
+                        "name": extract_value(normalized_entity, "p"),
                         "updateComment": "Creation of the entity"
-                    })
+                    }]
                 if extract_value(normalized_entity, "r") is not None:
-                    data['countries'].append({
-                        "name": extract_value(normalized_entity, True),
+                    data['countries'] = [{
+                        "name": extract_value(normalized_entity, "r"),
                         "updateComment": "Creation of the entity"
-                    })
+                    }]
             elif type_of_entity == "military-units":
                 data = {
                     "name": normalized_entity,
@@ -351,7 +355,7 @@ def extract_value(string, type_of_value):
         elif type_of_value is not False:
             if type_of_value is True:
                 # We want the french departement
-                specification_content = string[string.find('(')+1:string.find(')')-1]
+                specification_content = string[string.find('(')+1:string.find(')')]
                 if specification_content.find(':') == -1:
                     return specification_content
                 else:
@@ -364,16 +368,15 @@ def extract_value(string, type_of_value):
                         return None
             else:
                 # We want something else
-                specification_content = string[string.find('(')+1:string.find(')')-1]
-                print(specification_content)
+                specification_content = string[string.find('(')+1:string.find(')')]
                 if specification_content.find(type_of_value+':') != -1:
                     if specification_content.find(','):
                         array_specifications = specification_content.split(',')
                         for spec in array_specifications:
                             if spec.find(type_of_value+':') != -1:
-                                return spec[spec.find(type_of_value + ':') + len(type_of_value + ':'):len(spec)]
+                                return spec[spec.find(type_of_value + ': ') + len(type_of_value + ': '):len(spec)]
                     else:
-                        return specification_content[specification_content.find(type_of_value+':')+len(type_of_value+':'):len(specification_content)]
+                        return specification_content[specification_content.find(type_of_value+': ')+len(type_of_value+': '):len(specification_content)]
                 else:
                     return None
 
@@ -396,7 +399,7 @@ def compute_entity_from_source(string, array_source):
                 content_list.append({
                     'value': value[:value.find('[')-1],
                     'source': source,
-                    'order': array_source.find(source)
+                    'order': [i for i,x in enumerate(array_source) if x == source]
                 })
 
             content_list_order = sorted(content_list, key=itemgetter('order'))
@@ -408,3 +411,8 @@ def compute_entity_from_source(string, array_source):
                 return string
     else:
         return None
+
+
+def date_converter(o):
+    if isinstance(o, datetime.datetime):
+        return o.__str__()
