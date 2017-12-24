@@ -465,6 +465,6 @@ def get_index_place_name(normalized_entity):
         data.append(extract_value(normalized_entity, "p"))
 
     if len(data) > 0:
-        data += '('+', '.join(data)+')'
+        string += '('+', '.join(data)+')'
 
     return string
