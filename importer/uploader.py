@@ -6,8 +6,8 @@ import datetime
 from operator import itemgetter
 
 
-def read_data(metadata_file_url, numerisation_file_url, access_token, entities, hosting_organization):
-    ho_id = get_entity('hosting-organizations', hosting_organization)[0]['id']
+def read_data(metadata_file_url, numerisation_file_url, access_token, entities, hosting_organization, url_api, post_agreement):
+    ho_id = get_entity('hosting-organizations', hosting_organization, url_api)[0]['id']
 
     with open(metadata_file_url, newline='', encoding='utf-8') as csvfile:
         spamreader = csv.reader(csvfile, delimiter=';', quotechar='|')
@@ -113,7 +113,7 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                     will_type = "Testament olographe"
                 else:
                     will_type = "Lettre de dernières volontés"
-                will_type_id = get_entity('will-types', will_type)[0]['id']
+                will_type_id = get_entity('will-types', will_type, url_api)[0]['id']
 
                 testator_data = {
                     "name": name,
@@ -126,22 +126,22 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                     "addressNumber": testator__address_number_normalized,
                     "addressStreet": testator__address_street_normalized,
                     "addressDistrict": extract_value(testator__address_city_normalized, 'a'),
-                    "addressCity": compute_entity("places", extract_value(testator__address_city_normalized, False), None, access_token),
+                    "addressCity": compute_entity("places", extract_value(testator__address_city_normalized, False), None, access_token, url_api,post_agreement),
                     "dateOfBirthString": testator__birth_date_string,
                     "yearOfBirth": testator__birth_date_normalized[:4],
                     "dateOfBirthNormalized": testator__birth_date_normalized,
                     "dateOfBirthEndNormalized": None,
                     "placeOfBirthString": testator__birth_place_string,
-                    "placeOfBirthNormalized": compute_entity("places", testator__birth_place_normalized, None, access_token),
+                    "placeOfBirthNormalized": compute_entity("places", testator__birth_place_normalized, None, access_token, url_api, post_agreement),
                     "dateOfDeathString": testator__death_date_string,
                     "yearOfDeath": testator__death_date_normalized[:4],
                     "dateOfDeathNormalized": testator__death_date_normalized,
                     "dateOfDeathEndNormalized": testator__death_date_end_normalized,
-                    "placeOfDeathNormalized": compute_entity("places", testator__death_place_normalized, None, access_token),
+                    "placeOfDeathNormalized": compute_entity("places", testator__death_place_normalized, None, access_token, url_api, post_agreement),
                     "placeOfDeathString": testator__death_place_string,
                     "deathMention": "mort pour la France",
                     "memoireDesHommes": arrayfy(testator__memoire_des_hommes),
-                    "militaryUnitNormalized": compute_entity("military-units", [testator__regiment_number_normalized, testator__regiment_name_normalized], None, access_token),
+                    "militaryUnitNormalized": compute_entity("military-units", [testator__regiment_number_normalized, testator__regiment_name_normalized], None, access_token, url_api, post_agreement),
                     "militaryUnitString": testator__regiment_name_normalized,
                     "militaryUnitDeploymentString": testator__deployment_string,
                     "rank": testator__rank_string,
@@ -149,7 +149,7 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                     "isOfficialVersion": True,
                     "updateComment": "Creation of the entity"
                 }
-                testator_entity_id = compute_entity("testators", name, testator_data, access_token)
+                testator_entity_id = compute_entity("testators", name, testator_data, access_token, url_api, post_agreement)
 
                 # Bibliography management:
                 if testator__biography_link != "":
@@ -163,10 +163,10 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                             "freeReference": biblio,
                             "testator": testator_entity_id,
                             "updateComment": "Creation of the reference"
-                        }, access_token)
+                        }, access_token, url_api, post_agreement)
 
                 # Entity management:
-                if entity__is_shown.find("X") != -1:
+                if entity__is_shown != "":
                     entity__is_shown = False
                 else:
                     entity__is_shown = True
@@ -188,7 +188,7 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                         "willWritingDateNormalized": will__will_writing_date_normalized,
                         "willWritingDateEndNormalized": will__will_writing_date_end_normalized,
                         "willWritingYear": will__will_writing_date_normalized[:4],
-                        "willWritingPlaceNormalized": compute_entity("places", will__will_writing_place_normalized, None, access_token),
+                        "willWritingPlaceNormalized": compute_entity("places", will__will_writing_place_normalized, None, access_token, url_api, post_agreement),
                         "willWritingPlaceString": will__will_writing_place_string,
                         "testator": testator_entity_id,
                         "pagePhysDescSupport": will__will_phys_support,
@@ -216,7 +216,7 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
 
     for entity in entities:
         print(entities[entity])
-        post_entity('entities', entities[entity], access_token)
+        post_entity('entities', entities[entity], access_token, url_api, post_agreement)
 
 
 def isfloat(value):
@@ -249,31 +249,36 @@ def encode_resource_type(type_of_resource):
         return "page"
 
 
-def get_entity(type_of_entity, data):
-    print("> Get Entity")
-    url = 'http://localhost:8888/TestamentsDePoilus/api/web/app_dev.php/'+type_of_entity+'?search='+data
+def get_entity(type_of_entity, data, url_api):
+    url = url_api+'/'+type_of_entity+'?search='+data
     response = requests.get(url)
     content = json.loads(codecs.decode(response.content, 'utf-8'))
+
+    print("> Get Entity: " + str(content))
     return content
 
 
-def post_entity(type_of_entity, data, access_token):
-    print("> Post Entity")
+def post_entity(type_of_entity, data, access_token, url_api, post_agreement):
+    if post_agreement is True:
+        headers = {
+            "Authorization": "Bearer "+access_token
+        }
+        url = url_api+'/'+type_of_entity
+        response = requests.post(url, data=json.dumps(data, default=date_converter).encode('utf-8'), headers=headers)
+        content = json.loads(codecs.decode(response.content, 'utf-8'))
 
-    headers = {
-        "Authorization": "Bearer "+access_token
-    }
-    url = 'http://localhost:8888/TestamentsDePoilus/api/web/app_dev.php/'+type_of_entity
-    response = requests.post(url, data=json.dumps(data, default=date_converter).encode('utf-8'), headers=headers)
-    content = json.loads(codecs.decode(response.content, 'utf-8'))
-    if type_of_entity == "entities":
-        print(content)
-    return content
+        print("> Post Entity: " + str(content))
+        return content
+    else:
+        print("> Post Entity: " + str({'id': 1}))
+        return {'id': 1}
 
 
-def compute_entity(type_of_entity, normalized_entity, extra_data, access_token):
+def compute_entity(type_of_entity, normalized_entity, extra_data, access_token, url_api, post_agreement):
     print("> Compute Entity")
 
+    if type_of_entity == "places" and normalized_entity == "0":
+        return None
     if type_of_entity == "military-units":
         normalized_name = compute_entity_from_source(normalized_entity[1], ['MDH', 'NOT', 'TES', 'EC', 'AS'])
         normalized_number = compute_entity_from_source(normalized_entity[0], ['MDH', 'NOT', 'TES', 'EC', 'AS'])
@@ -285,15 +290,27 @@ def compute_entity(type_of_entity, normalized_entity, extra_data, access_token):
         else:
             normalized_entity = None
 
-    if len(get_entity(type_of_entity, normalized_entity)) > 0:
+    if type_of_entity != "places" and len(get_entity(type_of_entity, normalized_entity, url_api)) > 0:
         # The entity already exist, we return the id
-        return get_entity(type_of_entity, normalized_entity)[0]['id']
+        return get_entity(type_of_entity, normalized_entity, url_api)[0]['id']
+    elif type_of_entity == "places" and len(get_entity(type_of_entity, extract_value(normalized_entity, False), url_api)) > 0:
+        return get_entity(type_of_entity, extract_value(normalized_entity, False), url_api)[0]['id']
     else:
         if normalized_entity is not None and normalized_entity != "" and normalized_entity != " ":
             # The entity doesn't exist, we prepare it and the we post it
             if type_of_entity == "places":
+                if select_geonames_content(get_geonames_entity(normalized_entity), normalized_entity) is not None:
+                    geoname_entity = select_geonames_content(get_geonames_entity(normalized_entity), normalized_entity)
+                    geographical_coordinates = geoname_entity['lat']+'+'+geoname_entity['lng']
+                    geonames_id = geoname_entity["geonameId"]
+                else:
+                    geographical_coordinates = None
+                    geonames_id = None
+
                 data = {
-                    # "indexName": TODO,
+                    "indexName": get_index_place_name(normalized_entity),
+                    "geographicalCoordinates": geographical_coordinates,
+                    "geonamesId": geonames_id,
                     "names": [{
                         "name": extract_value(normalized_entity, False),
                         "updateComment": "Creation of the entity"
@@ -320,13 +337,16 @@ def compute_entity(type_of_entity, normalized_entity, extra_data, access_token):
                 data = {
                     "name": normalized_entity,
                     "updateComment": "Creation of the entity",
-                    "isOfficialVersion": True,
+                    "isOfficialVersion": True
                 }
+                if normalized_name is not None:
+                    data['regimentName'] = normalized_name
+                if normalized_number is not None:
+                    data['regimentNumber'] = normalized_number
             elif type_of_entity == "testators":
                 data = extra_data
-                print(data)
 
-            entity = post_entity(type_of_entity, data, access_token)
+            entity = post_entity(type_of_entity, data, access_token, url_api, post_agreement)
             return entity['id']
         else:
             return None
@@ -416,3 +436,35 @@ def compute_entity_from_source(string, array_source):
 def date_converter(o):
     if isinstance(o, datetime.datetime):
         return o.__str__()
+
+
+def get_geonames_entity(search):
+    print("> Get Entity")
+    url = "http://api.geonames.org/searchJSON?formatted=true&username=testamentsdepoilus&maxRows=3&continentCode=EU&lang=fr&searchlang=fr&inclBbox=false&q="+search
+    response = requests.get(url)
+    content = json.loads(codecs.decode(response.content, 'utf-8'))
+    return content
+
+
+def select_geonames_content(results, search):
+    for entity in results['geonames']:
+        if (extract_value(search, "p") is None or extract_value(search, "p") == "France") and entity['countryName'] == "France":
+            return entity
+    return None
+
+
+def get_index_place_name(normalized_entity):
+    string = extract_value(normalized_entity, False)
+
+    data = []
+    if extract_value(normalized_entity, True) is not None:
+        data.append(extract_value(normalized_entity, True))
+    if extract_value(normalized_entity, "r") is not None:
+        data.append(extract_value(normalized_entity, "r"))
+    if extract_value(normalized_entity, "p") is not None:
+        data.append(extract_value(normalized_entity, "p"))
+
+    if len(data) > 0:
+        data += '('+', '.join(data)+')'
+
+    return string
