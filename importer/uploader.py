@@ -8,6 +8,7 @@ from operator import itemgetter
 
 def read_data(metadata_file_url, numerisation_file_url, access_token, entities, hosting_organization, url_api, post_agreement):
     ho_id = get_entity('hosting-organizations', hosting_organization, url_api)[0]['id']
+    unpost_lines = []
 
     with open(metadata_file_url, newline='', encoding='utf-8') as csvfile:
         spamreader = csv.reader(csvfile, delimiter=';', quotechar='|')
@@ -71,6 +72,10 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
             will__photoshop = row[54]
             entity__resources = []
 
+            if entity__will_number == "" or will__validation_resp == "" or will__lawyer_study_arab_number == "" or will__call_number == "" or will__minute_date_string == "" or will__will_writing_date_normalized == "" or testator__lastname == "" or testator__firstnames == "" or testator__death_date_string == "" or testator__death_date_normalized == "" or testator__memoire_des_hommes == "":
+                unpost_lines.append(row)
+                continue
+
             with open(numerisation_file_url, newline='', encoding='utf-8') as csvfile_numerisation:
                 spamreader_numerisation = csv.reader(csvfile_numerisation, delimiter=';', quotechar='|')
                 for row_numerisation in spamreader_numerisation:
@@ -91,7 +96,7 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                                 "notes": None,
                                 "transcript": {
                                     "status": "todo",
-                                    "updateComment": "Creation of the transcript"
+                                    "updateComment": "Création du fichier de transcription"
                                 }
                             })
 
@@ -147,7 +152,7 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                     "rank": testator__rank_string,
                     "description": testator__biography_string,
                     "isOfficialVersion": True,
-                    "updateComment": "Creation of the entity"
+                    "updateComment": "Création de l'entité"
                 }
                 testator_entity_id = compute_entity("testators", name, testator_data, access_token, url_api, post_agreement)
 
@@ -162,7 +167,7 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                         post_entity("reference-items", {
                             "freeReference": biblio,
                             "testator": testator_entity_id,
-                            "updateComment": "Creation of the reference"
+                            "updateComment": "Création de la référence"
                         }, access_token, url_api, post_agreement)
 
                 # Entity management:
@@ -170,6 +175,11 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                     entity__is_shown = False
                 else:
                     entity__is_shown = True
+
+                print('dimension')
+                print(will__will_phys_dimensions)
+                print(will__envelope_phys_dimensions)
+                print(will__codicil_phys_dimensions)
 
                 entities[entity__will_number] = {
                     "willNumber": entity__will_number,
@@ -198,11 +208,11 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                         "pagePhysDescNumber": None,
                         "envelopePhysDescSupport": will__envelope_phys_support,
                         "envelopePhysDescHeight": get_dimension(will__envelope_phys_dimensions, 'h'),
-                        "envelopePhysDescWidth": get_dimension(will__envelope_phys_dimensions, 'h'),
+                        "envelopePhysDescWidth": get_dimension(will__envelope_phys_dimensions, 'w'),
                         "envelopePhysDescHand": will__envelope_phys_hand,
                         "codicilPhysDescSupport": will__codicil_phys_support,
                         "codicilPhysDescHeight": get_dimension(will__codicil_phys_dimensions, 'h'),
-                        "codicilPhysDescWidth": get_dimension(will__codicil_phys_dimensions, 'h'),
+                        "codicilPhysDescWidth": get_dimension(will__codicil_phys_dimensions, 'w'),
                         "codicilPhysDescHand": will__codicil_phys_hand,
                         "codicilPhysDescNumber": None,
                         "hostingOrganization": ho_id,
@@ -217,6 +227,9 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
     for entity in entities:
         print(entities[entity])
         post_entity('entities', entities[entity], access_token, url_api, post_agreement)
+
+    print('Lignes non soumises :')
+    print(unpost_lines)
 
 
 def isfloat(value):
@@ -313,30 +326,30 @@ def compute_entity(type_of_entity, normalized_entity, extra_data, access_token, 
                     "geonamesId": geonames_id,
                     "names": [{
                         "name": extract_value(normalized_entity, False),
-                        "updateComment": "Creation of the entity"
+                        "updateComment": "Création de l'entité"
                     }],
-                    "updateComment": "Creation of the entity",
+                    "updateComment": "Création de l'entité",
                     "isOfficialVersion": True,
                 }
                 if extract_value(normalized_entity, True) is not None:
                     data['frenchDepartements'] = [{
                         "name": extract_value(normalized_entity, True),
-                        "updateComment": "Creation of the entity"
+                        "updateComment": "Création de l'entité"
                     }]
                 if extract_value(normalized_entity, "p") is not None:
                     data['countries'] = [{
                         "name": extract_value(normalized_entity, "p"),
-                        "updateComment": "Creation of the entity"
+                        "updateComment": "Création de l'entité"
                     }]
                 if extract_value(normalized_entity, "r") is not None:
                     data['countries'] = [{
                         "name": extract_value(normalized_entity, "r"),
-                        "updateComment": "Creation of the entity"
+                        "updateComment": "Création de l'entité"
                     }]
             elif type_of_entity == "military-units":
                 data = {
                     "name": normalized_entity,
-                    "updateComment": "Creation of the entity",
+                    "updateComment": "Création de l'entité",
                     "isOfficialVersion": True
                 }
                 if normalized_name is not None:
@@ -402,11 +415,16 @@ def extract_value(string, type_of_value):
 
 
 def get_dimension(string, type_of_dimension):
-    array_dimension = string.split(' x ')
-    if type_of_dimension == 'h':
-        return array_dimension[0]
+    print('get_dimension')
+    print(string)
+    if string == "" or string is None:
+        return None
     else:
-        return array_dimension[1]
+        array_dimension = string.split('x')
+        if type_of_dimension == 'h':
+            return array_dimension[0]
+        elif type_of_dimension == 'w':
+            return array_dimension[1]
 
 
 def compute_entity_from_source(string, array_source):

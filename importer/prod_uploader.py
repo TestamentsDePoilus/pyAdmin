@@ -31,7 +31,7 @@ response = requests.post(url, data=json.dumps(login_fom).encode('utf-8'))
 content = json.loads(codecs.decode(response.content, 'utf-8'))
 if "access_token" in content:
     access_token = content["access_token"]
-    read_data('data/data-metadata.csv', 'data/data-numerisation.csv', access_token, entities, hosting_organization, url_api, post_agreement)
+    read_data('data/metadata_AD78.csv', 'data/numerisation_AD78.csv', access_token, entities, hosting_organization, url_api, post_agreement)
 
 else:
     print(content)
