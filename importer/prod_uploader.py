@@ -20,8 +20,8 @@ url_api = "https://testaments-de-poilus.huma-num.fr/api/web"
 
 login_fom = {
     "grant_type": "password",
-    "client_id": "1_5kokkn549hc00sc8wswk4cssssosg004o8s80k4g4kgk4wsko0",
-    "client_secret": "3w313wvgx3eo88kss8gkg8cskgc804gk0w8wggsw04k8w0woc0",
+    "client_id": "1_l0damhmhybk0g00o8ssk4cg88sw0w0ss4swok4ok4s4gscow",
+    "client_secret": "3o2hqkq803acswo0wosk08sos4o04og404s88cck4s0c4ssoss",
     "username": username,
     "password": password
 }
@@ -31,7 +31,7 @@ response = requests.post(url, data=json.dumps(login_fom).encode('utf-8'))
 content = json.loads(codecs.decode(response.content, 'utf-8'))
 if "access_token" in content:
     access_token = content["access_token"]
-    read_data('data/metadata_AD78.csv', 'data/numerisation_AD78.csv', access_token, entities, hosting_organization, url_api, post_agreement)
+    read_data('data/metadata_AN_2.csv', 'data/numerisation_AN_2.csv', access_token, entities, hosting_organization, url_api, post_agreement)
 
 else:
     print(content)

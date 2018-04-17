@@ -7,7 +7,9 @@ from operator import itemgetter
 
 
 def read_data(metadata_file_url, numerisation_file_url, access_token, entities, hosting_organization, url_api, post_agreement):
-    ho_id = get_entity('hosting-organizations', hosting_organization, url_api)[0]['id']
+    ho = get_entity('hosting-organizations', hosting_organization, url_api, None)[0]
+    ho_id = ho['id']
+    ho_code = ho['code']
     unpost_lines = []
 
     with open(metadata_file_url, newline='', encoding='utf-8') as csvfile:
@@ -76,6 +78,10 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                 unpost_lines.append(row)
                 continue
 
+            if len(get_entity('entities', entity__will_number+';'+ho_code, url_api, 'id')) > 0:
+                print('already have entity')
+                continue
+
             with open(numerisation_file_url, newline='', encoding='utf-8') as csvfile_numerisation:
                 spamreader_numerisation = csv.reader(csvfile_numerisation, delimiter=';', quotechar='|')
                 for row_numerisation in spamreader_numerisation:
@@ -118,7 +124,7 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                     will_type = "Testament olographe"
                 else:
                     will_type = "Lettre de dernières volontés"
-                will_type_id = get_entity('will-types', will_type, url_api)[0]['id']
+                will_type_id = get_entity('will-types', will_type, url_api, 'id')[0]['id']
 
                 testator_data = {
                     "name": name,
@@ -156,6 +162,10 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                 }
                 testator_entity_id = compute_entity("testators", name, testator_data, access_token, url_api, post_agreement)
 
+                if testator_entity_id is None:
+                    unpost_lines.append(row)
+                    continue
+
                 # Bibliography management:
                 if testator__biography_link != "":
                     if testator__biography_link.find('|') != -1:
@@ -176,12 +186,7 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                 else:
                     entity__is_shown = True
 
-                print('dimension')
-                print(will__will_phys_dimensions)
-                print(will__envelope_phys_dimensions)
-                print(will__codicil_phys_dimensions)
-
-                entities[entity__will_number] = {
+                entity = {
                     "willNumber": entity__will_number,
                     "isShown": entity__is_shown,
                     "will": {
@@ -224,12 +229,13 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                     "resources": entity__resources
                 }
 
-    for entity in entities:
-        print(entities[entity])
-        post_entity('entities', entities[entity], access_token, url_api, post_agreement)
+                post_entity('entities', entity, access_token, url_api, post_agreement)
 
     print('Lignes non soumises :')
     print(unpost_lines)
+    file = open('report.txt', 'a')
+    file.write(str(datetime.datetime.now()) + " > " + str(unpost_lines))
+    file.close()
 
 
 def isfloat(value):
@@ -262,8 +268,15 @@ def encode_resource_type(type_of_resource):
         return "page"
 
 
-def get_entity(type_of_entity, data, url_api):
-    url = url_api+'/'+type_of_entity+'?search='+data
+def get_entity(type_of_entity, data, url_api, profile):
+    profileStr = ""
+    if profile is not None:
+        profileStr = "&profile="+profile
+
+    if type_of_entity is None or data is None or url_api is None:
+        return []
+
+    url = url_api+'/'+type_of_entity+'?search='+data+profileStr
     response = requests.get(url)
     content = json.loads(codecs.decode(response.content, 'utf-8'))
 
@@ -303,16 +316,17 @@ def compute_entity(type_of_entity, normalized_entity, extra_data, access_token, 
         else:
             normalized_entity = None
 
-    if type_of_entity != "places" and len(get_entity(type_of_entity, normalized_entity, url_api)) > 0:
+    if type_of_entity != "places" and len(get_entity(type_of_entity, normalized_entity, url_api, 'id')) > 0:
         # The entity already exist, we return the id
-        return get_entity(type_of_entity, normalized_entity, url_api)[0]['id']
-    elif type_of_entity == "places" and len(get_entity(type_of_entity, extract_value(normalized_entity, False), url_api)) > 0:
-        return get_entity(type_of_entity, extract_value(normalized_entity, False), url_api)[0]['id']
+        return get_entity(type_of_entity, normalized_entity, url_api, 'id')[0]['id']
+    elif type_of_entity == "places" and len(get_entity(type_of_entity, extract_value(normalized_entity, False), url_api, 'id')) > 0:
+        return get_entity(type_of_entity, extract_value(normalized_entity, False), url_api, 'id')[0]['id']
     else:
         if normalized_entity is not None and normalized_entity != "" and normalized_entity != " ":
             # The entity doesn't exist, we prepare it and the we post it
             if type_of_entity == "places":
-                if select_geonames_content(get_geonames_entity(normalized_entity), normalized_entity) is not None:
+                geonames_results = get_geonames_entity(normalized_entity)
+                if geonames_results is not None and select_geonames_content(geonames_results, normalized_entity) is not None:
                     geoname_entity = select_geonames_content(get_geonames_entity(normalized_entity), normalized_entity)
                     geographical_coordinates = geoname_entity['lat']+'+'+geoname_entity['lng']
                     geonames_id = geoname_entity["geonameId"]
@@ -360,7 +374,13 @@ def compute_entity(type_of_entity, normalized_entity, extra_data, access_token, 
                 data = extra_data
 
             entity = post_entity(type_of_entity, data, access_token, url_api, post_agreement)
-            return entity['id']
+            if entity is None or ('code' in entity and entity['code'] == 500):
+                file = open('report.txt', 'a')
+                file.write(str(datetime.datetime.now())+" > "+str(data))
+                file.close()
+                return None
+            else:
+                return entity['id']
         else:
             return None
 
@@ -459,9 +479,12 @@ def date_converter(o):
 def get_geonames_entity(search):
     print("> Get Entity")
     url = "http://api.geonames.org/searchJSON?formatted=true&username=testamentsdepoilus&maxRows=3&continentCode=EU&lang=fr&searchlang=fr&inclBbox=false&q="+search
-    response = requests.get(url)
-    content = json.loads(codecs.decode(response.content, 'utf-8'))
-    return content
+    try:
+        response = requests.get(url)
+        content = json.loads(codecs.decode(response.content, 'utf-8'))
+        return content
+    except json.decoder.JSONDecodeError:
+        return None
 
 
 def select_geonames_content(results, search):
