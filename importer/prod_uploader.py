@@ -9,6 +9,10 @@ def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
 
 
+with open('env/parameters.json', encoding='utf-8-sig') as json_file:
+    text = json_file.read()
+    parameters = json.load(json_file)
+
 entities = {}
 hosting_organization = input('Please type the name of the hosting organization: ')
 username = input('Please type your username: ')
@@ -20,8 +24,8 @@ url_api = "https://testaments-de-poilus.huma-num.fr/api/web"
 
 login_fom = {
     "grant_type": "password",
-    "client_id": "1_l0damhmhybk0g00o8ssk4cg88sw0w0ss4swok4ok4s4gscow",
-    "client_secret": "3o2hqkq803acswo0wosk08sos4o04og404s88cck4s0c4ssoss",
+    "client_id": parameters['prod']['client_id'],
+    "client_secret": parameters['prod']['client_secret'],
     "username": username,
     "password": password
 }

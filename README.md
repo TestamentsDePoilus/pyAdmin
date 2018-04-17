@@ -11,4 +11,6 @@ Python instance for administration of Testaments de Poilus platform
     - Vérifier que toutes les lignes soient bien formées (sur la même ligne)
     - Copier-coller les fichiers dans l'application Python, dans le dossier **importer/data**
 - Faire un test d'upload sur la version test de l'application :
+    - Vérifier que la ligne `read_data` (environ ligne 38) appelle les bons fichiers de metadonnées
     - Exécuter le fichier **dev_uploader.py**
+- Si tout s'est bien passé en test, répéter l'opération avec le fichier **prod_uploader.py**
