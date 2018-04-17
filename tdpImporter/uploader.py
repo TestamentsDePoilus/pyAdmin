@@ -280,6 +280,7 @@ def get_entity(type_of_entity, data, url_api, profile):
     response = requests.get(url)
     content = json.loads(codecs.decode(response.content, 'utf-8'))
 
+    print(url)
     print("> Get Entity: " + str(content))
     return content
 

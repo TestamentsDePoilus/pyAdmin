@@ -2,7 +2,7 @@ import csv
 import requests
 import json
 import codecs
-from importer.uploader import read_data
+from tdpImporter.uploader import read_data
 
 
 def str2bool(v):
@@ -10,17 +10,13 @@ def str2bool(v):
 
 
 with open('env/parameters.json', encoding='utf-8-sig') as json_file:
-    text = json_file.read()
     parameters = json.load(json_file)
 
 entities = {}
-hosting_organization = input('Please type the name of the hosting organization: ')
+hosting_organization = input('Please type the code of the hosting organization (Archives nationales): ')
 username = input('Please type your username: ')
 password = input('Please type your password: ')
 post_agreement = str2bool(input('Do you want to post the entities: '))
-# client_id = input('Please type your client id: ')
-# client_secret = input('Please type your client secret: ')
-url_api = "https://testaments-de-poilus.huma-num.fr/api/web"
 
 login_fom = {
     "grant_type": "password",
@@ -29,6 +25,8 @@ login_fom = {
     "username": username,
     "password": password
 }
+
+url_api = "https://testaments-de-poilus.huma-num.fr/api/web"
 
 url = url_api+'/oauth/v2/token'
 response = requests.post(url, data=json.dumps(login_fom).encode('utf-8'))
