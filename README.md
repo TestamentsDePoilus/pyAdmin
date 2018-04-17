@@ -15,4 +15,5 @@ Python instance for administration of Testaments de Poilus platform
 - Faire un test d'upload sur la version test de l'application :
     - Vérifier que la ligne `read_data` (environ ligne 38) appelle les bons fichiers de metadonnées
     - Exécuter le fichier **dev_uploader.py**
+    - Le script indique à la fin "Lignes non soumises :", ce qui correspond aux échecs d'import. Ces lignes sont également ajoutées au fichier **report.txt**
 - Si tout s'est bien passé en test, répéter l'opération avec le fichier **prod_uploader.py**
