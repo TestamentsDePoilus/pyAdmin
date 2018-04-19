@@ -151,7 +151,7 @@ def read_data(metadata_file_url, numerisation_file_url, access_token, entities, 
                     "placeOfDeathNormalized": compute_entity("places", testator__death_place_normalized, None, access_token, url_api, post_agreement),
                     "placeOfDeathString": testator__death_place_string,
                     "deathMention": "mort pour la France",
-                    "memoireDesHommes": arrayfy(testator__memoire_des_hommes),
+                    "memoireDesHommes": arrayfy(testator__memoire_des_hommes, '|'),
                     "militaryUnitNormalized": compute_entity("military-units", [testator__regiment_number_normalized, testator__regiment_name_normalized], None, access_token, url_api, post_agreement),
                     "militaryUnitString": testator__regiment_name_normalized,
                     "militaryUnitDeploymentString": testator__deployment_string,
@@ -386,9 +386,9 @@ def compute_entity(type_of_entity, normalized_entity, extra_data, access_token, 
             return None
 
 
-def arrayfy(string):
-    if string.find(',') != -1:
-        string = string.split(',')
+def arrayfy(string, separator):
+    if string.find(separator) != -1:
+        string = string.split(separator)
     else:
         string = [string]
     return string
