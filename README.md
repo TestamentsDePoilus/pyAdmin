@@ -2,6 +2,7 @@
 Python instance for administration of Testaments de Poilus platform
 
 ## Procédure d'import des données
+- Récupérer (si ça n'est pas fait) le fichier de configuration **parameters.json** et le placer dans un dossier **env**
 - Ouvrir le fichier d'inventaire avec un logiciel tableur pour en vérifier le contenu
     - Identifier les images à retravailler à la main
         - Les reconstituer via un logiciel de photomontage
