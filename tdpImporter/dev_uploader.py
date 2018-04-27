@@ -28,7 +28,7 @@ login_fom = {
 
 url_api = 'https://tdp.karl-pineau.fr/api/web'
 
-url = 'https://tdp.karl-pineau.fr/api/web/app_dev.php/oauth/v2/token'
+url = 'https://tdp.karl-pineau.fr/api/web/oauth/v2/token'
 response = requests.post(url, data=json.dumps(login_fom).encode('utf-8'))
 content = json.loads(codecs.decode(response.content, 'utf-8'))
 if "access_token" in content:

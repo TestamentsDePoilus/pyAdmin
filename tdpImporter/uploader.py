@@ -339,28 +339,16 @@ def compute_entity(type_of_entity, normalized_entity, extra_data, access_token, 
                     "indexName": get_index_place_name(normalized_entity),
                     "geographicalCoordinates": geographical_coordinates,
                     "geonamesId": geonames_id,
-                    "names": [{
-                        "name": extract_value(normalized_entity, False),
-                        "updateComment": "Création de l'entité"
-                    }],
+                    "name": extract_value(normalized_entity, False),
                     "updateComment": "Création de l'entité",
                     "isOfficialVersion": True,
                 }
                 if extract_value(normalized_entity, True) is not None:
-                    data['frenchDepartements'] = [{
-                        "name": extract_value(normalized_entity, True),
-                        "updateComment": "Création de l'entité"
-                    }]
+                    data['frenchDepartement'] = extract_value(normalized_entity, True)
                 if extract_value(normalized_entity, "p") is not None:
-                    data['countries'] = [{
-                        "name": extract_value(normalized_entity, "p"),
-                        "updateComment": "Création de l'entité"
-                    }]
+                    data['country'] = extract_value(normalized_entity, "p")
                 if extract_value(normalized_entity, "r") is not None:
-                    data['countries'] = [{
-                        "name": extract_value(normalized_entity, "r"),
-                        "updateComment": "Création de l'entité"
-                    }]
+                    data['frenchRegion'] = extract_value(normalized_entity, "r")
             elif type_of_entity == "military-units":
                 data = {
                     "name": normalized_entity,
