@@ -69,23 +69,30 @@ def exporter(url_api, url_strict):
     content = json.loads(codecs.decode(response.content, 'utf-8'))
     if "access_token" in content:
         access_token = content["access_token"]
-        export_type = int(input('Souhaitez-vous exporter une (tapez 1) ou plusieurs (tapez 2) notices ? '))
+
+        export_type = int(input('Souhaitez-vous exporter des testaments (tapez 1) ou des entités contextuelles (tapez 2) ? '))
 
         if export_type == 1:
-            id_to_export = input('Veuillez indiquer l\'identifiant de la notice à exporter : ')
-            print("Cliquez sur le lien suivant pour télécharger votre contenu : "+url_strict+str(get_export(id_to_export, url_api)['link']))
+            export_entity_type = int(input('Souhaitez-vous exporter une (tapez 1) ou plusieurs (tapez 2) notices ? '))
 
-        elif export_type == 2:
-            q1 = str2bool(input('Voulez-vous exporter un lot de fiches en fonction de leur statut ? (oui/non) '))
-            if q1 is True:
-                q11 = input('Veuillez indiquer le statut à exporter : ')
-                exporter_lot("status", q11, url_api, url_strict)
-            else:
-                q2 = str2bool(input('Voulez-vous exporter un lot de fiches en fonction de leur institution de provenance ? (oui/non) '))
-                if q2 is True:
-                    q21 = input('Veuillez indiquer le code de l\'institution : ')
-                    exporter_lot("hosting-organization", q21, url_api, url_strict)
+            if export_entity_type == 1:
+                id_to_export = input('Veuillez indiquer l\'identifiant de la notice à exporter : ')
+                print("Cliquez sur le lien suivant pour télécharger votre contenu : "+url_strict+str(get_export(id_to_export, url_api)['link']))
+
+            elif export_entity_type == 2:
+                q1 = str2bool(input('Voulez-vous exporter un lot de fiches en fonction de leur statut ? (oui/non) '))
+                if q1 is True:
+                    q11 = input('Veuillez indiquer le statut à exporter : ')
+                    exporter_lot("status", q11, url_api, url_strict)
                 else:
-                    print('Nous n\'avons pas d\'autres critères à vous proposer.')
+                    q2 = str2bool(input('Voulez-vous exporter un lot de fiches en fonction de leur institution de provenance ? (oui/non) '))
+                    if q2 is True:
+                        q21 = input('Veuillez indiquer le code de l\'institution : ')
+                        exporter_lot("hosting-organization", q21, url_api, url_strict)
+                    else:
+                        print('Nous n\'avons pas d\'autres critères à vous proposer.')
+        elif export_type == 2:
+            # Exportation des entités contextuelles
+            print('À venir')
     else:
         print(content)
