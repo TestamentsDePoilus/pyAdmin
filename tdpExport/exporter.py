@@ -37,6 +37,19 @@ def get_export(id, url_api):
     return content
 
 
+def get_contextual_export(type, url_api):
+    if id is None or url_api is None:
+        return []
+
+    url = url_api+'/contextual-xml?type='+type
+    response = requests.get(url)
+    content = json.loads(codecs.decode(response.content, 'utf-8'))
+
+    print(url)
+    print("> Get Export: " + str(content))
+    return content
+
+
 def exporter_lot(type, value, url_api, url_strict):
     entities = get_entities(type, value, url_api, "id")
     list_urls = []
@@ -47,6 +60,7 @@ def exporter_lot(type, value, url_api, url_strict):
     print('Voici la liste de vos exports :')
     for url in list_urls:
         print(url)
+
 
 def exporter(url_api, url_strict):
     with open('env/parameters.json', encoding='utf-8-sig') as json_file:
@@ -93,6 +107,8 @@ def exporter(url_api, url_strict):
                         print('Nous n\'avons pas d\'autres critères à vous proposer.')
         elif export_type == 2:
             # Exportation des entités contextuelles
-            print('À venir')
+            export_entity_type = input('Spécifiez le type d\'entité contextuelle que vous souhaitez exporter (militaryUnit|place|person) ')
+            print("Cliquez sur le lien suivant pour télécharger votre contenu : " + url_strict + str(get_contextual_export(export_entity_type, url_api)['link']))
+
     else:
         print(content)
